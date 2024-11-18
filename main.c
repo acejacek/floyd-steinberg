@@ -1,6 +1,5 @@
 #include <raylib.h>
 #include <raymath.h>
-#include <stdio.h>
 
 #define WIDTH 900
 #define HEIGHT 580
