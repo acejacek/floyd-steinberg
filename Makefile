@@ -1,11 +1,13 @@
-CFLAGS = -O1 -Wall -std=c99 
-LFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+CFLAGS = -O1 -Wall -Werror -Wextra -pedantic -std=c99
+LFLAGS = -lraylib -lm
 
 BIN=fs
 
-ALL: main.c
-	cc $(CFLAGS) -o $(BIN) main.c $(LFLAGS)
+$(BIN): main.c
+	gcc $(CFLAGS) -o $(BIN) main.c $(LFLAGS)
 
-RUN:
-run:
+run: $(BIN)
 	./$(BIN)
+
+clean:
+	rm $(BIN)

@@ -52,7 +52,8 @@ int main(void)
     Image orig = LoadImage(IMAGE_NAME);
     ImageResize(&orig, WIDTH, HEIGHT);
 
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose())
+    {
         if (IsMouseButtonPressed(0))
             if (++filter >= FCount) filter = ORIG;
         if (IsMouseButtonPressed(1))
@@ -245,7 +246,8 @@ int main(void)
                 TITLE("Floyd-Steinberg BW");
                 break;
 
-            default:
+            case FCount:
+            break;
         }
         EndDrawing();
     }
