@@ -7,7 +7,12 @@
 
 #define TITLE(MSG) { DrawText(MSG, 10, 10, 40, WHITE); }
 
-enum F {ORIG = 1, GREY, TWO_COLOR, FS_BW, REDUCED2, FS2, REDUCED3, FS3, REDUCED8, FS8, FCount};
+enum F {ORIG = 1,
+        GREY, TWO_COLOR, FS_BW, ATKINSON,
+        REDUCED2, FS2,
+        REDUCED3, FS3,
+        REDUCED8, FS8,
+        FCount};
 
 typedef struct {
     int errR;
@@ -31,12 +36,31 @@ Color reduce(int factor, Color pixel, Error* e)
     return pixel;
 } 
 
-// add error value to the pixel
+Color make_grey(Color* pixel)
+{
+    float r = pixel->r * 0.2126f;
+    float g = pixel->g * 0.7152f;
+    float b = pixel->b * 0.0722f;
+    float luma = r + g + b; 
+    return (Color){luma, luma, luma, 255};
+} 
+
+// FS - add error value to the pixel
 Color add_error(Color pixel, Error e, int factor)
 {
     pixel.r += e.errR * factor >> 4;
     pixel.g += e.errG * factor >> 4; 
     pixel.b += e.errB * factor >> 4;
+
+    return pixel;
+}
+
+// Atkinson - add error value to the pixel
+Color add_error_atk(Color pixel, Error e)
+{
+    pixel.r += e.errR >> 3;
+    pixel.g += e.errG >> 3; 
+    pixel.b += e.errB >> 3;
 
     return pixel;
 }
@@ -81,28 +105,18 @@ int main(void)
                     for (int x = 0; x < WIDTH; ++x)
                     {
                         int index = (y * orig.width + x);
-                        Color pixel = colors[index];
-                        float r = pixel.r * 0.2126f;
-                        float g = pixel.g * 0.7152f;
-                        float b = pixel.b * 0.0722f;
-                        float luma = r + g + b; 
-                        Color grey = {luma, luma, luma, 255};
+                        Color grey = make_grey(colors + index);
                         DrawPixel(x, y, grey);
                     }
                 TITLE("Grey");
                 break;
-                
+
             case TWO_COLOR:
                 for (int y = 0; y < HEIGHT; ++y)
                     for (int x = 0; x < WIDTH; ++x)
                     {
                         int index = (y * orig.width + x);
-                        Color pixel = colors[index];
-                        float r = pixel.r * 0.2126f;
-                        float g = pixel.g * 0.7152f;
-                        float b = pixel.b * 0.0722f;
-                        float luma = r + g + b; 
-                        Color grey = {luma, luma, luma, 255};
+                        Color grey = make_grey(colors + index);
                         grey = reduce(2, grey, &err);
                         DrawPixel(x, y, grey);
                     }
@@ -222,12 +236,7 @@ int main(void)
                     for (int x = 1; x < WIDTH-1; ++x)
                     {
                         int index = (y * orig.width + x);
-                        Color pixel = colors[index];
-                        float r = pixel.r * 0.2126f;
-                        float g = pixel.g * 0.7152f;
-                        float b = pixel.b * 0.0722f;
-                        unsigned char luma = r + g + b; 
-                        Color grey = {luma, luma, luma, 255};
+                        Color grey = make_grey(colors + index);
                         grey = reduce(2, grey, &err);
                         DrawPixel(x, y, grey);
 
@@ -244,6 +253,36 @@ int main(void)
                         colors[index] = add_error(colors[index], err, 1);
                     }
                 TITLE("Floyd-Steinberg BW");
+                break;
+
+            case ATKINSON:
+                for (int y = 0; y < HEIGHT-2; ++y)
+                    for (int x = 1; x < WIDTH-2; ++x)
+                    {
+                        int index = (y * orig.width + x);
+                        Color grey = make_grey(colors + index);
+                        grey = reduce(2, grey, &err);
+                        DrawPixel(x, y, grey);
+
+                        index = ( y      * orig.width + x + 1);
+                        colors[index] = add_error_atk(colors[index], err);
+
+                        index = ( y      * orig.width + x + 2);
+                        colors[index] = add_error_atk(colors[index], err);
+
+                        index = ((y + 1) * orig.width + x - 1);
+                        colors[index] = add_error_atk(colors[index], err);
+
+                        index = ((y + 1) * orig.width + x);
+                        colors[index] = add_error_atk(colors[index], err);
+
+                        index = ((y + 1) * orig.width + x + 1);
+                        colors[index] = add_error_atk(colors[index], err);
+
+                        index = ((y + 2) * orig.width + x);
+                        colors[index] = add_error_atk(colors[index], err);
+                    }
+                TITLE("Atkinson dithering BW");
                 break;
 
             case FCount:
