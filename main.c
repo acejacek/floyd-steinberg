@@ -66,18 +66,22 @@ Color add_error_atk(Color pixel, Error e)
     return pixel;
 }
 
-void distribute_error(int x, int y, int width, Color* colors, int index, Error err)
+void distribute_error(int x, int y, int width, int height, Color* colors, int index, Error err)
 {
 	colors[index] = add_error(colors[index], err, 7);
 
-	index = ((y + 1) * width + x - 1);
-	colors[index] = add_error(colors[index], err, 3);
+    if (y + 1 < height) {
+        index = ((y + 1) * width + x - 1);
+        colors[index] = add_error(colors[index], err, 3);
 
-	index = ((y + 1) * width + x);
-	colors[index] = add_error(colors[index], err, 5);
+        index = ((y + 1) * width + x);
+        colors[index] = add_error(colors[index], err, 5);
 
-	index = ((y + 1) * width + x + 1);
-	colors[index] = add_error(colors[index], err, 1);
+        if (x + 1 < width) {
+            index = ((y + 1) * width + x + 1);
+            colors[index] = add_error(colors[index], err, 1);
+        }
+    }
 }
 
 int main(void)
@@ -90,8 +94,6 @@ int main(void)
 
     Image img = LoadImage(IMAGE_NAME);
     ImageResize(&img, WIDTH, HEIGHT);
-
-    printf("img: %d, %d\n", img.height, img.width);
 
     while (!WindowShouldClose())
     {
@@ -177,88 +179,54 @@ int main(void)
                 break;
 
             case FS2:
-                for (int y = 0; y < img.height - 1; ++y)
-                    for (int x = 1; x < img.width - 1; ++x)
+                for (int y = 0; y < img.height; ++y)
+                    for (int x = 1; x < img.width; ++x)
                     {
                         int index = (y * img.width + x);
                         Color pixel = colors[index];
                         pixel = reduce(2, pixel, &err);
                         DrawPixel(x, y, pixel);
-
-                        index = ( y      * img.width + x + 1);
-                        colors[index] = add_error(colors[index], err, 7);
-
-                        index = ((y + 1) * img.width + x - 1);
-                        colors[index] = add_error(colors[index], err, 3);
-
-                        index = ((y + 1) * img.width + x);
-                        colors[index] = add_error(colors[index], err, 5);
-
-                        index = ((y + 1) * img.width + x + 1);
-                        colors[index] = add_error(colors[index], err, 1);
+						distribute_error(x, y, img.width, img.height, colors, index, err);
                     }
+
                 TITLE("Floyd-Steinberg 2");
                 break;
 
             case FS3:
-                for (int y = 0; y < img.height-1; ++y)
-                    for (int x = 1; x < img.width-1; ++x)
+                for (int y = 0; y < img.height; ++y)
+                    for (int x = 1; x < img.width; ++x)
                     {
                         int index = (y * img.width + x);
                         Color pixel = colors[index];
                         pixel = reduce(3, pixel, &err);
                         DrawPixel(x, y, pixel);
-
-                        index = ( y      * img.width + x + 1);
-                        colors[index] = add_error(colors[index], err, 7);
-
-                        index = ((y + 1) * img.width + x - 1);
-                        colors[index] = add_error(colors[index], err, 3);
-
-                        index = ((y + 1) * img.width + x);
-                        colors[index] = add_error(colors[index], err, 5);
-
-                        index = ((y + 1) * img.width + x + 1);
-                        colors[index] = add_error(colors[index], err, 1);
+						distribute_error(x, y, img.width, img.height, colors, index, err);
                     }
                 TITLE("Floyd-Steinberg 3");
                 break;
 
             case FS8:
-                for (int y = 0; y < img.height-1; ++y)
-                    for (int x = 1; x < img.width-1; ++x)
+                for (int y = 0; y < img.height; ++y)
+                    for (int x = 1; x < img.width; ++x)
                     {
                         int index = (y * img.width + x);
                         Color pixel = colors[index];
                         pixel = reduce(8, pixel, &err);
                         DrawPixel(x, y, pixel);
-
-                        index = ( y      * img.width + x + 1);
-                        colors[index] = add_error(colors[index], err, 7);
-
-                        index = ((y + 1) * img.width + x - 1);
-                        colors[index] = add_error(colors[index], err, 3);
-
-                        index = ((y + 1) * img.width + x);
-                        colors[index] = add_error(colors[index], err, 5);
-
-                        index = ((y + 1) * img.width + x + 1);
-                        colors[index] = add_error(colors[index], err, 1);
+						distribute_error(x, y, img.width, img.height, colors, index, err);
                     }
                 TITLE("Floyd-Steinberg 8");
                 break;
 
             case FS_BW:
-                for (int y = 0; y < img.height-1; ++y)
-                    for (int x = 1; x < img.width-1; ++x)
+                for (int y = 0; y < img.height; ++y)
+                    for (int x = 1; x < img.width; ++x)
                     {
                         int index = (y * img.width + x);
                         Color grey = make_grey(colors + index);
                         grey = reduce(2, grey, &err);
                         DrawPixel(x, y, grey);
-						
-						distribute_error(x, y, img.width, colors, index, err);
-
+						distribute_error(x, y, img.width, img.height, colors, index, err);
                     }
                 TITLE("Floyd-Steinberg BW");
                 break;
